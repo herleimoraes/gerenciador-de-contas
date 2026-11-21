@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro & Contas a Pagar</title>
+    
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS Variables for Seamless Theme Switching -->
+    <style>
+        :root, [data-theme="dark"] {
+            --bg-main: #0b0f17;
+            --bg-panel: #131b2e;
+            --bg-elevated: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: #1e293b;
+            --accent-sky: #38bdf8;
+            --accent-emerald: #34d399;
+            --accent-purple: #c084fc;
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f1f5f9;
+            --bg-panel: #ffffff;
+            --bg-elevated: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-color: #cbd5e1;
+            --accent-sky: #0284c7;
+            --accent-emerald: #059669;
+            --accent-purple: #7c3aed;
+        }
+
+        [data-theme="blue-emerald"] {
+            --bg-main: #06151f;
+            --bg-panel: #0b2233;
+            --bg-elevated: #11324a;
+            --text-primary: #ecfeff;
+            --text-secondary: #7dd3fc;
+            --border-color: #163f5c;
+            --accent-sky: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-purple: #a855f7;
+        }
+
+        [data-theme="midnight-purple"] {
+            --bg-main: #0f0a1c;
+            --bg-panel: #1a1230;
+            --bg-elevated: #281c47;
+            --text-primary: #f5f3ff;
+            --text-secondary: #a78bfa;
+            --border-color: #35255e;
+            --accent-sky: #38bdf8;
+            --accent-emerald: #34d399;
+            --accent-purple: #c084fc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            transition: background-color 0.25s ease, color 0.25s ease;
+            min-height: 100vh;
+        }
+
+        .theme-panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+        }
+
+        .theme-elevated {
+            background-color: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+        }
+
+        .theme-text-muted {
+            color: var(--text-secondary);
+        }
+
+        .theme-border {
+            border-color: var(--border-color);
+        }
+
+        .theme-input {
+            background-color: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .theme-input:focus {
+            border-color: var(--accent-sky);
+            outline: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.4);
+        }
+    </style>
+</head>
+<body class="antialiased pb-12">
+
+    <!-- TOP APPLICATION HEADER -->
+    <header class="sticky top-0 z-40 theme-panel border-b shadow-md backdrop-blur-md bg-opacity-90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            
+            <!-- App Logo / Title -->
+            <div class="flex items-center gap-3">
+                <div class="p-2 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                    <i data-lucide="wallet" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold tracking-tight">FinanceHub | Gerenciador de Contas</h1>
+                    <p class="text-[11px] theme-text-muted hidden sm:block">Contas a Pagar & Controle de Ganhos</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation Bar -->
+            <nav class="flex items-center theme-elevated p-1 rounded-xl">
+                <button id="tab-btn-calendar" onclick="switchTab('calendar')" 
+                    class="flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>Calendário</span>
+                </button>
+                <button id="tab-btn-manage" onclick="switchTab('manage')" 
+                    class="flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold theme-text-muted hover:opacity-80 transition-all">
+                    <i data-lucide="list-checks" class="w-4 h-4"></i>
+                    <span>Gerenciar</span>
+                </button>
+                <button id="tab-btn-charts" onclick="switchTab('charts')" 
+                    class="flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold theme-text-muted hover:opacity-80 transition-all">
+                    <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    <span>Gráficos</span>
+                </button>
+            </nav>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2">
+                <button onclick="openModal('modal-account')" 
+                    class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 transition-all shadow-md shadow-sky-500/20 active:scale-95">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">+ Conta</span>
+                </button>
+                
+                <button onclick="openModal('modal-income')" 
+                    class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-md shadow-emerald-500/20 active:scale-95">
+                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">+ Ganho</span>
+                </button>
+
+                <button onclick="toggleThemeToast()" title="Configurações de Tema" 
+                    class="p-2 sm:p-2.5 rounded-xl theme-elevated theme-text-muted hover:text-sky-400 transition-all active:scale-95">
+                    <i data-lucide="settings" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+
+        <!-- ==================== TAB 1: CALENDÁRIO ==================== -->
+        <div id="tab-content-calendar" class="space-y-6">
+            
+            <!-- Calendar Month Header & Quick Filters -->
+            <div class="theme-panel p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+                
+                <!-- Month Navigator -->
+                <div class="flex items-center gap-3 justify-between md:justify-start">
+                    <div class="flex items-center gap-1">
+                        <button onclick="navigateMonth(-1)" class="p-2 rounded-xl theme-elevated hover:border-sky-500/50 transition-all active:scale-95" title="Mês Anterior">
+                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="goToToday()" class="px-3 py-1.5 text-xs font-semibold rounded-xl theme-elevated hover:border-sky-500/50 transition-all">
+                            Hoje
+                        </button>
+                        <button onclick="navigateMonth(1)" class="p-2 rounded-xl theme-elevated hover:border-sky-500/50 transition-all active:scale-95" title="Próximo Mês">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <h2 id="current-month-display" class="text-lg sm:text-2xl font-extrabold tracking-tight capitalize min-w-[170px] text-center md:text-left">
+                        Carregando...
+                    </h2>
+                </div>
+
+                <!-- Filters Bar -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Status Filter Pills -->
+                    <div class="flex items-center gap-1 theme-elevated p-1 rounded-xl text-xs">
+                        <button onclick="setCalStatusFilter('all')" id="cal-filter-status-all" class="px-3 py-1 rounded-lg font-semibold bg-sky-500/20 text-sky-400">Todas</button>
+                        <button onclick="setCalStatusFilter('pending')" id="cal-filter-status-pending" class="px-3 py-1 rounded-lg font-semibold theme-text-muted">Pendentes</button>
+                        <button onclick="setCalStatusFilter('paid')" id="cal-filter-status-paid" class="px-3 py-1 rounded-lg font-semibold theme-text-muted">Pagas</button>
+                    </div>
+
+                    <!-- Category Filter Dropdown -->
+                    <select id="cal-category-select" onchange="setCalCategoryFilter(this.value)" class="theme-input rounded-xl px-3 py-1.5 text-xs font-medium cursor-pointer">
+                        <option value="all">Todas as Categorias</option>
+                        <option value="Moradia">🏠 Moradia</option>
+                        <option value="Alimentação">🛒 Alimentação</option>
+                        <option value="Transporte">🚗 Transporte</option>
+                        <option value="Serviços & Assinaturas">⚡ Serviços & Assinaturas</option>
+                        <option value="Saúde">⚕️ Saúde</option>
+                        <option value="Lazer">🎉 Lazer</option>
+                        <option value="Educação">📚 Educação</option>
+                        <option value="Outros">📦 Outros</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Calendar Days Header -->
+            <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs uppercase tracking-wider theme-text-muted px-1">
+                <div class="py-1 text-rose-400">Dom</div>
+                <div class="py-1">Seg</div>
+                <div class="py-1">Ter</div>
+                <div class="py-1">Qua</div>
+                <div class="py-1">Qui</div>
+                <div class="py-1">Sex</div>
+                <div class="py-1 text-sky-400">Sáb</div>
+            </div>
+
+            <!-- 7-Column Responsive Month Grid -->
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1.5 sm:gap-2">
+                <!-- JS Dynamic Render -->
+            </div>
+
+            <!-- Summary Financial Cards (4 Cards Layout) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Card 1: Total Contas do Mês -->
+                <div class="theme-panel p-4 rounded-2xl flex items-center justify-between shadow-sm border">
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold theme-text-muted">Total de Contas (Mês)</p>
+                        <h3 id="summary-total-expenses" class="text-xl font-black tracking-tight text-sky-400">R$ 0,00</h3>
+                        <p id="summary-count-expenses" class="text-[11px] theme-text-muted">0 contas no total</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-sky-500/15 text-sky-400">
+                        <i data-lucide="credit-card" class="w-6 h-6"></i>
+                    </div>
+                </div>
+
+                <!-- Card 2: Contas Recorrentes -->
+                <div class="theme-panel p-4 rounded-2xl flex items-center justify-between shadow-sm border">
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold theme-text-muted">Contas Recorrentes</p>
+                        <h3 id="summary-recurrent-expenses" class="text-xl font-black tracking-tight text-indigo-400">R$ 0,00</h3>
+                        <p id="summary-count-recurrent" class="text-[11px] theme-text-muted">0 recorrentes</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-indigo-500/15 text-indigo-400">
+                        <i data-lucide="repeat" class="w-6 h-6"></i>
+                    </div>
+                </div>
+
+                <!-- Card 3: Contas Parceladas -->
+                <div class="theme-panel p-4 rounded-2xl flex items-center justify-between shadow-sm border">
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold theme-text-muted">Contas Parceladas</p>
+                        <h3 id="summary-installment-expenses" class="text-xl font-black tracking-tight text-purple-400">R$ 0,00</h3>
+                        <p id="summary-count-installment" class="text-[11px] theme-text-muted">0 parceladas</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-purple-500/15 text-purple-400">
+                        <i data-lucide="layers" class="w-6 h-6"></i>
+                    </div>
+                </div>
+
+                <!-- Card 4: Ganhos & Saldo Restante -->
+                <div class="theme-panel p-4 rounded-2xl flex items-center justify-between shadow-sm border">
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold theme-text-muted">Total Ganhos / Saldo</p>
+                        <h3 id="summary-total-incomes" class="text-xl font-black tracking-tight text-emerald-400">R$ 0,00</h3>
+                        <p id="summary-balance" class="text-[11px] font-bold">Saldo: R$ 0,00</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-emerald-500/15 text-emerald-400">
+                        <i data-lucide="piggy-bank" class="w-6 h-6"></i>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: GERENCIAR ==================== -->
+        <div id="tab-content-manage" class="hidden space-y-6">
+            <div class="theme-panel p-5 rounded-2xl space-y-5">
+                
+                <!-- Manage Header & Search -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b theme-border pb-4">
+                    <div>
+                        <h2 class="text-lg font-bold">Gerenciador de Lançamentos</h2>
+                        <p class="text-xs theme-text-muted">Visualização em lista, pesquisa e alteração rápida de dados</p>
+                    </div>
+
+                    <div class="relative w-full md:w-80">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 theme-text-muted"></i>
+                        <input type="text" id="manage-search" oninput="handleManageSearch(this.value)" placeholder="Buscar lançamento por descrição..."
+                            class="w-full theme-input rounded-xl pl-9 pr-3.5 py-2 text-xs">
+                    </div>
+                </div>
+
+                <!-- Manage Filters -->
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Entity Toggle -->
+                        <div class="flex items-center gap-1 theme-elevated p-1 rounded-xl text-xs">
+                            <button onclick="setManageType('expense')" id="manage-type-expense" class="px-3 py-1.5 rounded-lg font-bold bg-sky-500/20 text-sky-400">Contas a Pagar</button>
+                            <button onclick="setManageType('income')" id="manage-type-income" class="px-3 py-1.5 rounded-lg font-bold theme-text-muted">Ganhos / Entradas</button>
+                        </div>
+
+                        <!-- Scope Toggle -->
+                        <div class="flex items-center gap-1 theme-elevated p-1 rounded-xl text-xs">
+                            <button onclick="setManageScope('current')" id="manage-scope-current" class="px-3 py-1.5 rounded-lg font-semibold bg-sky-500/20 text-sky-400">Mês Selecionado</button>
+                            <button onclick="setManageScope('all')" id="manage-scope-all" class="px-3 py-1.5 rounded-lg font-semibold theme-text-muted">Todos os Meses</button>
+                        </div>
+                    </div>
+
+                    <!-- Additional Expense Filters -->
+                    <div id="manage-expense-filters" class="flex flex-wrap items-center gap-2">
+                        <select id="manage-status-select" onchange="setManageStatus(this.value)" class="theme-input rounded-xl px-3 py-1.5 text-xs font-medium cursor-pointer">
+                            <option value="all">Todos os Status</option>
+                            <option value="pending">Somente Pendentes</option>
+                            <option value="paid">Somente Pagos</option>
+                        </select>
+                        <select id="manage-category-select" onchange="setManageCategory(this.value)" class="theme-input rounded-xl px-3 py-1.5 text-xs font-medium cursor-pointer">
+                            <option value="all">Todas as Categorias</option>
+                            <option value="Moradia">🏠 Moradia</option>
+                            <option value="Alimentação">🛒 Alimentação</option>
+                            <option value="Transporte">🚗 Transporte</option>
+                            <option value="Serviços & Assinaturas">⚡ Serviços & Assinaturas</option>
+                            <option value="Saúde">⚕️ Saúde</option>
+                            <option value="Lazer">🎉 Lazer</option>
+                            <option value="Educação">📚 Educação</option>
+                            <option value="Outros">📦 Outros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Management Item List Container -->
+                <div id="manage-items-container" class="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
+                    <!-- Dynamic rendering via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: GRÁFICOS ==================== -->
+        <div id="tab-content-charts" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Chart 1: Doughnut (Recorrentes vs Parceladas) -->
+                <div class="theme-panel p-5 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between border-b theme-border pb-3">
+                        <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-sky-400"></i>
+                            Recorrentes vs Parceladas (Mês)
+                        </h3>
+                    </div>
+                    <div class="h-64 flex items-center justify-center relative">
+                        <canvas id="chart-doughnut"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Bar (Ganhos vs Despesas) -->
+                <div class="theme-panel p-5 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between border-b theme-border pb-3">
+                        <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-400"></i>
+                            Ganhos vs Despesas (Mês)
+                        </h3>
+                    </div>
+                    <div class="h-64 flex items-center justify-center relative">
+                        <canvas id="chart-bar"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Horizontal Bar (Despesas por Categoria) -->
+                <div class="theme-panel p-5 rounded-2xl space-y-4 lg:col-span-2">
+                    <div class="flex items-center justify-between border-b theme-border pb-3">
+                        <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                            <i data-lucide="layers" class="w-4 h-4 text-purple-400"></i>
+                            Despesas por Categoria (Mês)
+                        </h3>
+                    </div>
+                    <div class="h-72 flex items-center justify-center relative">
+                        <canvas id="chart-category"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ==================== FLOATING DAY TOAST ==================== -->
+    <div id="toast-day" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="theme-panel w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-4 border">
+            <div class="flex items-center justify-between border-b theme-border pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-xl bg-sky-500/20 text-sky-400">
+                        <i data-lucide="calendar" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 id="toast-day-title" class="font-bold text-base">Contas do Dia</h3>
+                        <p id="toast-day-subtitle" class="text-xs theme-text-muted">Detalhamento dos vencimentos</p>
+                    </div>
+                </div>
+                <button onclick="closeDayToast()" class="p-1 rounded-lg theme-text-muted hover:opacity-80">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div id="toast-day-list" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                <!-- Dynamic Items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== THEME SETTINGS TOAST ==================== -->
+    <div id="toast-settings" class="fixed top-20 right-4 sm:right-8 z-50 hidden w-80 theme-panel rounded-2xl p-4 shadow-2xl border space-y-4">
+        <div class="flex items-center justify-between border-b theme-border pb-2.5">
+            <div class="flex items-center gap-2">
+                <i data-lucide="palette" class="w-4 h-4 text-sky-400"></i>
+                <h4 class="font-bold text-sm">Temas de Cores</h4>
+            </div>
+            <button onclick="toggleThemeToast()" class="p-1 rounded-lg theme-text-muted hover:opacity-80">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2">
+            <button onclick="setTheme('dark')" id="theme-btn-dark" class="p-3 rounded-xl theme-elevated flex items-center justify-between hover:border-sky-500 transition-all text-left">
+                <span class="text-xs font-semibold">Escuro Padrão</span>
+                <div class="flex items-center gap-1">
+                    <span class="w-3.5 h-3.5 rounded-full bg-slate-900 border border-slate-700"></span>
+                    <span class="w-3.5 h-3.5 rounded-full bg-sky-500"></span>
+                </div>
+            </button>
+
+            <button onclick="setTheme('light')" id="theme-btn-light" class="p-3 rounded-xl theme-elevated flex items-center justify-between hover:border-sky-500 transition-all text-left">
+                <span class="text-xs font-semibold">Claro Elegante</span>
+                <div class="flex items-center gap-1">
+                    <span class="w-3.5 h-3.5 rounded-full bg-white border border-slate-300"></span>
+                    <span class="w-3.5 h-3.5 rounded-full bg-sky-600"></span>
+                </div>
+            </button>
+
+            <button onclick="setTheme('blue-emerald')" id="theme-btn-blue-emerald" class="p-3 rounded-xl theme-elevated flex items-center justify-between hover:border-sky-500 transition-all text-left">
+                <span class="text-xs font-semibold">Azul & Esmeralda</span>
+                <div class="flex items-center gap-1">
+                    <span class="w-3.5 h-3.5 rounded-full bg-cyan-900 border border-cyan-700"></span>
+                    <span class="w-3.5 h-3.5 rounded-full bg-emerald-500"></span>
+                </div>
+            </button>
+
+            <button onclick="setTheme('midnight-purple')" id="theme-btn-midnight-purple" class="p-3 rounded-xl theme-elevated flex items-center justify-between hover:border-sky-500 transition-all text-left">
+                <span class="text-xs font-semibold">Meia-Noite Roxo</span>
+                <div class="flex items-center gap-1">
+                    <span class="w-3.5 h-3.5 rounded-full bg-purple-950 border border-purple-800"></span>
+                    <span class="w-3.5 h-3.5 rounded-full bg-purple-500"></span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: + NOVA CONTA ==================== -->
+    <div id="modal-account" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="theme-panel w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-5 border">
+            <div class="flex items-center justify-between border-b theme-border pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-xl bg-sky-500/20 text-sky-400">
+                        <i data-lucide="credit-card" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Cadastrar Conta a Pagar</h3>
+                </div>
+                <button onclick="closeModal('modal-account')" class="p-1 rounded-lg theme-text-muted hover:opacity-80">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleSaveExpense(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Nome / Descrição da Conta</label>
+                    <input type="text" id="acc-title" required placeholder="Ex: Aluguel, Supermercado, Luz..."
+                        class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Valor da Conta (R$)</label>
+                        <input type="number" step="0.01" id="acc-amount" required min="0.01" placeholder="0,00"
+                            class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Data de Vencimento</label>
+                        <input type="date" id="acc-date" required
+                            class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Categoria</label>
+                    <select id="acc-category" required class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm cursor-pointer">
+                        <option value="Moradia">🏠 Moradia</option>
+                        <option value="Alimentação">🛒 Alimentação</option>
+                        <option value="Transporte">🚗 Transporte</option>
+                        <option value="Serviços & Assinaturas">⚡ Serviços & Assinaturas</option>
+                        <option value="Saúde">⚕️ Saúde</option>
+                        <option value="Lazer">🎉 Lazer</option>
+                        <option value="Educação">📚 Educação</option>
+                        <option value="Outros" selected>📦 Outros</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Tipo de Lançamento</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="p-2.5 rounded-xl theme-elevated flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold hover:border-sky-500">
+                            <input type="radio" name="acc-type" value="unica" checked onchange="toggleInstallmentInput()" class="accent-sky-500">
+                            Única
+                        </label>
+                        <label class="p-2.5 rounded-xl theme-elevated flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold hover:border-sky-500">
+                            <input type="radio" name="acc-type" value="recorrente" onchange="toggleInstallmentInput()" class="accent-sky-500">
+                            Recorrente
+                        </label>
+                        <label class="p-2.5 rounded-xl theme-elevated flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold hover:border-sky-500">
+                            <input type="radio" name="acc-type" value="parcelada" onchange="toggleInstallmentInput()" class="accent-sky-500">
+                            Parcelada
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Installment Options -->
+                <div id="acc-installment-container" class="hidden p-3.5 rounded-xl theme-elevated space-y-2">
+                    <label class="block text-xs font-semibold uppercase theme-text-muted">Quantidade de Parcelas</label>
+                    <input type="number" id="acc-installments-count" min="2" max="60" value="2"
+                        class="w-full theme-input rounded-xl px-3.5 py-2 text-sm">
+                    <p class="text-[11px] theme-text-muted">Serão criados lançamentos mensais automáticos para cada parcela futura.</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t theme-border">
+                    <button type="button" onclick="closeModal('modal-account')" class="px-4 py-2 rounded-xl text-xs font-semibold theme-text-muted hover:opacity-80">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 transition-all shadow-md">
+                        Salvar Conta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: + NOVO GANHO ==================== -->
+    <div id="modal-income" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="theme-panel w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5 border">
+            <div class="flex items-center justify-between border-b theme-border pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
+                        <i data-lucide="trending-up" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Cadastrar Entrada / Ganho</h3>
+                </div>
+                <button onclick="closeModal('modal-income')" class="p-1 rounded-lg theme-text-muted hover:opacity-80">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleSaveIncome(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Descrição do Ganho</label>
+                    <input type="text" id="inc-title" required placeholder="Ex: Salário Mensal, Freelance, Rendimentos..."
+                        class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" id="inc-amount" required min="0.01" placeholder="0,00"
+                            class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Data da Entrada</label>
+                        <input type="date" id="inc-date" required
+                            class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Tipo de Entrada</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="p-2.5 rounded-xl theme-elevated flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold hover:border-emerald-500">
+                            <input type="radio" name="inc-type" value="fixo" checked class="accent-emerald-500">
+                            Salário Fixo
+                        </label>
+                        <label class="p-2.5 rounded-xl theme-elevated flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold hover:border-emerald-500">
+                            <input type="radio" name="inc-type" value="extra" class="accent-emerald-500">
+                            Renda Extra
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t theme-border">
+                    <button type="button" onclick="closeModal('modal-income')" class="px-4 py-2 rounded-xl text-xs font-semibold theme-text-muted hover:opacity-80">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-md">
+                        Salvar Ganho
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: EDITAR LANÇAMENTO ==================== -->
+    <div id="modal-edit" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="theme-panel w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-5 border">
+            <div class="flex items-center justify-between border-b theme-border pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-xl bg-sky-500/20 text-sky-400">
+                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="edit-modal-title" class="text-lg font-bold">Editar Lançamento</h3>
+                </div>
+                <button onclick="closeModal('modal-edit')" class="p-1 rounded-lg theme-text-muted hover:opacity-80">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="form-edit" onsubmit="handleSaveEdit(event)" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-item-type">
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Descrição</label>
+                    <input type="text" id="edit-title" required class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" id="edit-amount" required min="0.01" class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Data</label>
+                        <input type="date" id="edit-date" required class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm">
+                    </div>
+                </div>
+
+                <div id="edit-category-group">
+                    <label class="block text-xs font-semibold uppercase theme-text-muted mb-1">Categoria</label>
+                    <select id="edit-category" class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm cursor-pointer">
+                        <option value="Moradia">🏠 Moradia</option>
+                        <option value="Alimentação">🛒 Alimentação</option>
+                        <option value="Transporte">🚗 Transporte</option>
+                        <option value="Serviços & Assinaturas">⚡ Serviços & Assinaturas</option>
+                        <option value="Saúde">⚕️ Saúde</option>
+                        <option value="Lazer">🎉 Lazer</option>
+                        <option value="Educação">📚 Educação</option>
+                        <option value="Outros">📦 Outros</option>
+                    </select>
+                </div>
+
+                <div id="edit-status-group" class="p-3.5 rounded-xl theme-elevated flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold">Situação do Pagamento</p>
+                        <p class="text-[11px] theme-text-muted">Marcar se a conta já foi quitada</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="edit-paid" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t theme-border">
+                    <button type="button" onclick="closeModal('modal-edit')" class="px-4 py-2 rounded-xl text-xs font-semibold theme-text-muted hover:opacity-80">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 transition-all shadow-md">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APPLICATION LOGIC ==================== -->
+    <script>
+        // Global Application State
+        let state = {
+            currentYear: new Date().getFullYear(),
+            currentMonth: new Date().getMonth(), // 0-11
+            currentTheme: 'dark',
+            expenses: [],
+            incomes: [],
+            // Calendar Filters
+            calStatusFilter: 'all',
+            calCategoryFilter: 'all',
+            // Manage Page Filters
+            manageSearch: '',
+            manageTypeFilter: 'expense',
+            manageScope: 'current',
+            manageStatus: 'all',
+            manageCategory: 'all',
+            // Active Day for Toast
+            selectedDateKey: null,
+            // Chart instances
+            charts: {
+                doughnut: null,
+                bar: null,
+                category: null
+            }
+        };
+
+        const STORAGE_KEY_EXPENSES = 'fh_expenses_v3';
+        const STORAGE_KEY_INCOMES = 'fh_incomes_v3';
+        const STORAGE_KEY_THEME = 'fh_theme_v3';
+
+        const CATEGORY_COLORS = {
+            'Moradia': '#f97316',
+            'Alimentação': '#eab308',
+            'Transporte': '#3b82f6',
+            'Serviços & Assinaturas': '#06b6d4',
+            'Saúde': '#ef4444',
+            'Lazer': '#ec4899',
+            'Educação': '#8b5cf6',
+            'Outros': '#64748b'
+        };
+
+        // --- INITIALIZATION ---
+        window.addEventListener('load', () => {
+            loadStateFromStorage();
+            
+            // Default dates in modal inputs to today
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('acc-date').value = todayStr;
+            document.getElementById('inc-date').value = todayStr;
+
+            renderApp();
+        });
+
+        function loadStateFromStorage() {
+            const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
+            if (savedTheme) state.currentTheme = savedTheme;
+
+            const savedExp = localStorage.getItem(STORAGE_KEY_EXPENSES);
+            const savedInc = localStorage.getItem(STORAGE_KEY_INCOMES);
+
+            if (savedExp) {
+                state.expenses = JSON.parse(savedExp);
+            }
+            if (savedInc) {
+                state.incomes = JSON.parse(savedInc);
+            }
+
+            // Seed sample data for current month if empty
+            if (!savedExp && !savedInc) {
+                seedInitialData();
+            }
+        }
+
+        function saveStateToStorage() {
+            localStorage.setItem(STORAGE_KEY_EXPENSES, JSON.stringify(state.expenses));
+            localStorage.setItem(STORAGE_KEY_INCOMES, JSON.stringify(state.incomes));
+            localStorage.setItem(STORAGE_KEY_THEME, state.currentTheme);
+        }
+
+        function seedInitialData() {
+            const y = state.currentYear;
+            const m = state.currentMonth;
+            
+            const pad = (n) => String(n).padStart(2, '0');
+            const makeDate = (day) => `${y}-${pad(m + 1)}-${pad(day)}`;
+
+            state.expenses = [
+                { id: 'exp-1', title: 'Aluguel & Condomínio', amount: 1450.00, date: makeDate(5), type: 'recorrente', category: 'Moradia', paid: true },
+                { id: 'exp-2', title: 'Supermercado Mensal', amount: 820.50, date: makeDate(10), type: 'recorrente', category: 'Alimentação', paid: true },
+                { id: 'exp-3', title: 'Internet & Celular', amount: 149.90, date: makeDate(15), type: 'recorrente', category: 'Serviços & Assinaturas', paid: false },
+                { id: 'exp-4', title: 'Smart TV Streaming', amount: 45.90, date: makeDate(18), type: 'recorrente', category: 'Serviços & Assinaturas', paid: false },
+                { id: 'exp-5', title: 'Notebook (3/10)', amount: 250.00, date: makeDate(22), type: 'parcelada', category: 'Outros', paid: false, currentInstallment: 3, totalInstallments: 10 },
+                { id: 'exp-6', title: 'Plano de Saúde', amount: 320.00, date: makeDate(25), type: 'recorrente', category: 'Saúde', paid: false },
+                { id: 'exp-7', title: 'Restaurantes Fim de Semana', amount: 180.00, date: makeDate(28), type: 'unica', category: 'Lazer', paid: false }
+            ];
+
+            state.incomes = [
+                { id: 'inc-1', title: 'Salário Mensal', amount: 5200.00, date: makeDate(1), type: 'fixo' },
+                { id: 'inc-2', title: 'Projeto Freelance UX', amount: 1100.00, date: makeDate(14), type: 'extra' }
+            ];
+
+            saveStateToStorage();
+        }
+
+        // --- NAVIGATION & TABS ---
+        function switchTab(tabName) {
+            ['calendar', 'manage', 'charts'].forEach(t => {
+                const content = document.getElementById(`tab-content-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (t === tabName) {
+                    content.classList.remove('hidden');
+                    btn.className = "flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-sky-500/20 text-sky-400 border border-sky-500/30";
+                } else {
+                    content.classList.add('hidden');
+                    btn.className = "flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold theme-text-muted hover:opacity-80 transition-all";
+                }
+            });
+
+            if (tabName === 'manage') renderManagePage();
+            if (tabName === 'charts') renderCharts();
+            lucide.createIcons();
+        }
+
+        function navigateMonth(direction) {
+            state.currentMonth += direction;
+            if (state.currentMonth > 11) {
+                state.currentMonth = 0;
+                state.currentYear++;
+            } else if (state.currentMonth < 0) {
+                state.currentMonth = 11;
+                state.currentYear--;
+            }
+            renderApp();
+        }
+
+        function goToToday() {
+            const today = new Date();
+            state.currentYear = today.getFullYear();
+            state.currentMonth = today.getMonth();
+            renderApp();
+        }
+
+        // --- RENDER ROUTINER ---
+        function renderApp() {
+            document.documentElement.setAttribute('data-theme', state.currentTheme);
+            highlightActiveThemeButton();
+            renderMonthTitle();
+            renderCalendar();
+            renderSummaryCards();
+            renderManagePage();
+            renderCharts();
+            lucide.createIcons();
+        }
+
+        function renderMonthTitle() {
+            const date = new Date(state.currentYear, state.currentMonth, 1);
+            const str = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            document.getElementById('current-month-display').innerText = str;
+        }
+
+        // --- CALENDAR RENDER ENGINE ---
+        function setCalStatusFilter(status) {
+            state.calStatusFilter = status;
+            ['all', 'pending', 'paid'].forEach(s => {
+                const btn = document.getElementById(`cal-filter-status-${s}`);
+                if (s === status) {
+                    btn.className = "px-3 py-1 rounded-lg font-semibold bg-sky-500/20 text-sky-400";
+                } else {
+                    btn.className = "px-3 py-1 rounded-lg font-semibold theme-text-muted";
+                }
+            });
+            renderCalendar();
+        }
+
+        function setCalCategoryFilter(cat) {
+            state.calCategoryFilter = cat;
+            renderCalendar();
+        }
+
+        function getExpensesForMonth(year, month) {
+            return state.expenses.filter(e => {
+                if (!e.date) return false;
+                const [y, m] = e.date.split('-').map(Number);
+                return y === year && (m - 1) === month;
+            });
+        }
+
+        function getIncomesForMonth(year, month) {
+            return state.incomes.filter(i => {
+                if (!i.date) return false;
+                const [y, m] = i.date.split('-').map(Number);
+                return y === year && (m - 1) === month;
+            });
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            const firstDayIndex = new Date(state.currentYear, state.currentMonth, 1).getDay();
+            const daysInMonth = new Date(state.currentYear, state.currentMonth + 1, 0).getDate();
+
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === state.currentYear && today.getMonth() === state.currentMonth;
+            const todayDate = today.getDate();
+
+            let monthExpenses = getExpensesForMonth(state.currentYear, state.currentMonth);
+
+            // Apply Calendar Filters
+            monthExpenses = monthExpenses.filter(e => {
+                if (state.calStatusFilter === 'pending' && e.paid) return false;
+                if (state.calStatusFilter === 'paid' && !e.paid) return false;
+                if (state.calCategoryFilter !== 'all' && (e.category || 'Outros') !== state.calCategoryFilter) return false;
+                return true;
+            });
+
+            // Blank prefix slots
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "min-h-[86px] sm:min-h-[100px] rounded-xl opacity-20 theme-elevated";
+                grid.appendChild(emptyCell);
+            }
+
+            // Month days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const pad = (n) => String(n).padStart(2, '0');
+                const dateKey = `${state.currentYear}-${pad(state.currentMonth + 1)}-${pad(day)}`;
+                
+                const dayExpenses = monthExpenses.filter(e => e.date === dateKey);
+                const hasExpenses = dayExpenses.length > 0;
+                const isToday = isCurrentMonth && day === todayDate;
+
+                const dayTotal = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
+                const recurrentCount = dayExpenses.filter(e => e.type === 'recorrente').length;
+                const installmentCount = dayExpenses.filter(e => e.type === 'parcelada').length;
+
+                const cell = document.createElement('div');
+                cell.className = `min-h-[86px] sm:min-h-[100px] p-2 rounded-xl theme-panel flex flex-col justify-between transition-all relative border ${
+                    hasExpenses ? 'cursor-pointer hover:border-sky-400 hover:shadow-lg active:scale-[0.98]' : ''
+                } ${isToday ? 'ring-2 ring-emerald-400 border-emerald-400' : ''}`;
+
+                if (hasExpenses) {
+                    cell.onclick = () => openDayToast(dateKey, dayExpenses);
+                }
+
+                cell.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs sm:text-sm font-extrabold ${isToday ? 'text-emerald-400' : ''}">${day}</span>
+                        ${hasExpenses ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-sky-500/20 text-sky-400">${dayExpenses.length}</span>` : ''}
+                    </div>
+
+                    ${hasExpenses ? `
+                        <div class="space-y-1 mt-1">
+                            <div class="text-[11px] sm:text-xs font-black text-sky-400 truncate">
+                                ${formatCurrency(dayTotal)}
+                            </div>
+                            <div class="flex flex-wrap gap-1">
+                                ${recurrentCount > 0 ? `<span class="text-[9px] px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold" title="Recorrentes">R:${recurrentCount}</span>` : ''}
+                                ${installmentCount > 0 ? `<span class="text-[9px] px-1 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold" title="Parceladas">P:${installmentCount}</span>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+
+                grid.appendChild(cell);
+            }
+        }
+
+        // --- SUMMARY CARDS RENDER ---
+        function renderSummaryCards() {
+            const mExpenses = getExpensesForMonth(state.currentYear, state.currentMonth);
+            const mIncomes = getIncomesForMonth(state.currentYear, state.currentMonth);
+
+            const totalExpenses = mExpenses.reduce((acc, e) => acc + e.amount, 0);
+            const recurrentTotal = mExpenses.filter(e => e.type === 'recorrente').reduce((acc, e) => acc + e.amount, 0);
+            const installmentTotal = mExpenses.filter(e => e.type === 'parcelada').reduce((acc, e) => acc + e.amount, 0);
+
+            const recurrentCount = mExpenses.filter(e => e.type === 'recorrente').length;
+            const installmentCount = mExpenses.filter(e => e.type === 'parcelada').length;
+
+            const totalIncomes = mIncomes.reduce((acc, i) => acc + i.amount, 0);
+            const balance = totalIncomes - totalExpenses;
+
+            document.getElementById('summary-total-expenses').innerText = formatCurrency(totalExpenses);
+            document.getElementById('summary-count-expenses').innerText = `${mExpenses.length} contas no total`;
+
+            document.getElementById('summary-recurrent-expenses').innerText = formatCurrency(recurrentTotal);
+            document.getElementById('summary-count-recurrent').innerText = `${recurrentCount} recorrentes`;
+
+            document.getElementById('summary-installment-expenses').innerText = formatCurrency(installmentTotal);
+            document.getElementById('summary-count-installment').innerText = `${installmentCount} parceladas`;
+
+            document.getElementById('summary-total-incomes').innerText = formatCurrency(totalIncomes);
+            document.getElementById('summary-balance').innerText = `Saldo: ${formatCurrency(balance)}`;
+            document.getElementById('summary-balance').className = `text-[11px] font-bold ${balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+        }
+
+        // --- FLOATING DAY TOAST HANDLERS ---
+        function openDayToast(dateKey, dayExpenses) {
+            state.selectedDateKey = dateKey;
+            const formattedDate = new Date(dateKey + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+            
+            document.getElementById('toast-day-title').innerText = `Contas em ${formattedDate}`;
+            document.getElementById('toast-day-subtitle').innerText = `${dayExpenses.length} conta(s) cadastrada(s) para este dia`;
+
+            const listEl = document.getElementById('toast-day-list');
+            listEl.innerHTML = dayExpenses.map(item => {
+                const catName = item.category || 'Outros';
+                const catColor = CATEGORY_COLORS[catName] || CATEGORY_COLORS['Outros'];
+                const isRecurrent = item.type === 'recorrente';
+                const isInstallment = item.type === 'parcelada';
+
+                let tagLabel = 'Única';
+                if (isRecurrent) tagLabel = 'Recorrente';
+                if (isInstallment) tagLabel = `Parcela ${item.currentInstallment}/${item.totalInstallments}`;
+
+                return `
+                    <div class="p-3 rounded-xl theme-elevated flex items-center justify-between gap-3">
+                        <div class="space-y-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-xs truncate ${item.paid ? 'line-through opacity-60' : ''}">${escapeHtml(item.title)}</span>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: ${catColor}; background-color: ${catColor}20;">
+                                    ${catName}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 text-[11px] theme-text-muted">
+                                <span class="font-bold text-sky-400">${formatCurrency(item.amount)}</span>
+                                <span>•</span>
+                                <span>${tagLabel}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                            <button onclick="togglePaidStatus('${item.id}')" title="${item.paid ? 'Marcar como PENDENTE' : 'Marcar como PAGO'}"
+                                class="p-1.5 rounded-lg border transition-all ${item.paid ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'theme-text-muted hover:text-emerald-400'}">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="openEditModal('${item.id}', 'expense')" title="Editar conta"
+                                class="p-1.5 rounded-lg theme-text-muted hover:text-sky-400 transition-all">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteExpense('${item.id}')" title="Excluir conta"
+                                class="p-1.5 rounded-lg theme-text-muted hover:text-rose-400 transition-all">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('toast-day').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeDayToast() {
+            document.getElementById('toast-day').classList.add('hidden');
+        }
+
+        // --- MANAGEMENT TAB LOGIC ---
+        function setManageType(type) {
+            state.manageTypeFilter = type;
+            const expBtn = document.getElementById('manage-type-expense');
+            const incBtn = document.getElementById('manage-type-income');
+            const expFilters = document.getElementById('manage-expense-filters');
+
+            if (type === 'expense') {
+                expBtn.className = "px-3 py-1.5 rounded-lg font-bold bg-sky-500/20 text-sky-400";
+                incBtn.className = "px-3 py-1.5 rounded-lg font-bold theme-text-muted";
+                expFilters.classList.remove('hidden');
+            } else {
+                incBtn.className = "px-3 py-1.5 rounded-lg font-bold bg-emerald-500/20 text-emerald-400";
+                expBtn.className = "px-3 py-1.5 rounded-lg font-bold theme-text-muted";
+                expFilters.classList.add('hidden');
+            }
+            renderManagePage();
+        }
+
+        function setManageScope(scope) {
+            state.manageScope = scope;
+            const curBtn = document.getElementById('manage-scope-current');
+            const allBtn = document.getElementById('manage-scope-all');
+
+            if (scope === 'current') {
+                curBtn.className = "px-3 py-1.5 rounded-lg font-semibold bg-sky-500/20 text-sky-400";
+                allBtn.className = "px-3 py-1.5 rounded-lg font-semibold theme-text-muted";
+            } else {
+                allBtn.className = "px-3 py-1.5 rounded-lg font-semibold bg-sky-500/20 text-sky-400";
+                curBtn.className = "px-3 py-1.5 rounded-lg font-semibold theme-text-muted";
+            }
+            renderManagePage();
+        }
+
+        function setManageStatus(status) {
+            state.manageStatus = status;
+            renderManagePage();
+        }
+
+        function setManageCategory(cat) {
+            state.manageCategory = cat;
+            renderManagePage();
+        }
+
+        function handleManageSearch(query) {
+            state.manageSearch = query.toLowerCase().trim();
+            renderManagePage();
+        }
+
+        function renderManagePage() {
+            const container = document.getElementById('manage-items-container');
+            if (!container) return;
+
+            let items = [];
+
+            if (state.manageTypeFilter === 'expense') {
+                items = state.manageScope === 'current'
+                    ? getExpensesForMonth(state.currentYear, state.currentMonth)
+                    : [...state.expenses];
+
+                items = items.filter(e => {
+                    if (state.manageSearch && !e.title.toLowerCase().includes(state.manageSearch)) return false;
+                    if (state.manageStatus === 'pending' && e.paid) return false;
+                    if (state.manageStatus === 'paid' && !e.paid) return false;
+                    if (state.manageCategory !== 'all' && (e.category || 'Outros') !== state.manageCategory) return false;
+                    return true;
+                });
+            } else {
+                items = state.manageScope === 'current'
+                    ? getIncomesForMonth(state.currentYear, state.currentMonth)
+                    : [...state.incomes];
+
+                items = items.filter(i => {
+                    if (state.manageSearch && !i.title.toLowerCase().includes(state.manageSearch)) return false;
+                    return true;
+                });
+            }
+
+            items.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 theme-text-muted text-xs">
+                        Nenhum registro encontrado com os filtros aplicados.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => {
+                const isExpense = state.manageTypeFilter === 'expense';
+                const formattedDate = new Date(item.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+                if (isExpense) {
+                    const catName = item.category || 'Outros';
+                    const catColor = CATEGORY_COLORS[catName] || CATEGORY_COLORS['Outros'];
+                    const isRecurrent = item.type === 'recorrente';
+                    const isInstallment = item.type === 'parcelada';
+
+                    let typeLabel = 'Única';
+                    if (isRecurrent) typeLabel = 'Recorrente';
+                    if (isInstallment) typeLabel = `Parcela ${item.currentInstallment}/${item.totalInstallments}`;
+
+                    return `
+                        <div class="p-3.5 rounded-xl theme-elevated flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-sky-500/40 transition-all">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2 rounded-xl border mt-0.5" style="color: ${catColor}; border-color: ${catColor}30; background-color: ${catColor}15">
+                                    <i data-lucide="${isRecurrent ? 'repeat' : 'layers'}" class="w-4 h-4"></i>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="font-bold text-xs sm:text-sm ${item.paid ? 'line-through opacity-60' : ''}">${escapeHtml(item.title)}</span>
+                                        ${item.paid 
+                                            ? '<span class="text-[9px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">PAGO</span>' 
+                                            : '<span class="text-[9px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">PENDENTE</span>'}
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2 text-xs theme-text-muted">
+                                        <span>📅 ${formattedDate}</span>
+                                        <span>•</span>
+                                        <span class="font-semibold" style="color: ${catColor}">${catName}</span>
+                                        <span>•</span>
+                                        <span>${typeLabel}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 theme-border pt-2 sm:pt-0">
+                                <span class="text-sm font-extrabold text-sky-400">${formatCurrency(item.amount)}</span>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="togglePaidStatus('${item.id}')" title="${item.paid ? 'Marcar como PENDENTE' : 'Marcar como PAGO'}"
+                                        class="p-1.5 rounded-lg border transition-all ${item.paid ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'theme-text-muted hover:text-emerald-400'}">
+                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="openEditModal('${item.id}', 'expense')" title="Editar conta"
+                                        class="p-1.5 rounded-lg theme-text-muted hover:text-sky-400 transition-all">
+                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="deleteExpense('${item.id}')" title="Excluir conta"
+                                        class="p-1.5 rounded-lg theme-text-muted hover:text-rose-400 transition-all">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="p-3.5 rounded-xl theme-elevated flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-emerald-500/40 transition-all">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 mt-0.5">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="font-bold text-xs sm:text-sm">${escapeHtml(item.title)}</span>
+                                    <div class="flex items-center gap-2 text-xs theme-text-muted">
+                                        <span>📅 ${formattedDate}</span>
+                                        <span>•</span>
+                                        <span class="text-emerald-400 font-semibold">${item.type === 'fixo' ? 'Salário Fixo' : 'Renda Extra'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 theme-border pt-2 sm:pt-0">
+                                <span class="text-sm font-extrabold text-emerald-400">+ ${formatCurrency(item.amount)}</span>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="openEditModal('${item.id}', 'income')" title="Editar ganho"
+                                        class="p-1.5 rounded-lg theme-text-muted hover:text-emerald-400 transition-all">
+                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="deleteIncome('${item.id}')" title="Excluir ganho"
+                                        class="p-1.5 rounded-lg theme-text-muted hover:text-rose-400 transition-all">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // --- EDIT MODAL HANDLERS ---
+        function openEditModal(id, itemType) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-item-type').value = itemType;
+
+            const titleEl = document.getElementById('edit-modal-title');
+            const categoryGroup = document.getElementById('edit-category-group');
+            const statusGroup = document.getElementById('edit-status-group');
+
+            if (itemType === 'expense') {
+                const exp = state.expenses.find(e => e.id === id);
+                if (!exp) return;
+
+                titleEl.innerText = 'Editar Conta a Pagar';
+                document.getElementById('edit-title').value = exp.title;
+                document.getElementById('edit-amount').value = exp.amount;
+                document.getElementById('edit-date').value = exp.date;
+                document.getElementById('edit-category').value = exp.category || 'Outros';
+                document.getElementById('edit-paid').checked = !!exp.paid;
+
+                categoryGroup.classList.remove('hidden');
+                statusGroup.classList.remove('hidden');
+            } else {
+                const inc = state.incomes.find(i => i.id === id);
+                if (!inc) return;
+
+                titleEl.innerText = 'Editar Ganho / Entrada';
+                document.getElementById('edit-title').value = inc.title;
+                document.getElementById('edit-amount').value = inc.amount;
+                document.getElementById('edit-date').value = inc.date;
+
+                categoryGroup.classList.add('hidden');
+                statusGroup.classList.add('hidden');
+            }
+
+            openModal('modal-edit');
+        }
+
+        function handleSaveEdit(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const itemType = document.getElementById('edit-item-type').value;
+
+            const title = document.getElementById('edit-title').value.trim();
+            const amount = parseFloat(document.getElementById('edit-amount').value);
+            const date = document.getElementById('edit-date').value;
+
+            if (!title || isNaN(amount) || !date) return;
+
+            if (itemType === 'expense') {
+                const exp = state.expenses.find(e => e.id === id);
+                if (exp) {
+                    exp.title = title;
+                    exp.amount = amount;
+                    exp.date = date;
+                    exp.category = document.getElementById('edit-category').value;
+                    exp.paid = document.getElementById('edit-paid').checked;
+                }
+            } else {
+                const inc = state.incomes.find(i => i.id === id);
+                if (inc) {
+                    inc.title = title;
+                    inc.amount = amount;
+                    inc.date = date;
+                }
+            }
+
+            saveStateToStorage();
+            closeModal('modal-edit');
+            
+            // Refresh open toast if applicable
+            if (state.selectedDateKey) {
+                const dayExpenses = getExpensesForMonth(state.currentYear, state.currentMonth).filter(e => e.date === state.selectedDateKey);
+                if (dayExpenses.length > 0) openDayToast(state.selectedDateKey, dayExpenses);
+                else closeDayToast();
+            }
+
+            renderApp();
+        }
+
+        // --- ACCOUNT & INCOME MODAL ACTIONS ---
+        function toggleInstallmentInput() {
+            const selectedType = document.querySelector('input[name="acc-type"]:checked').value;
+            const container = document.getElementById('acc-installment-container');
+            if (selectedType === 'parcelada') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function handleSaveExpense(event) {
+            event.preventDefault();
+            const title = document.getElementById('acc-title').value.trim();
+            const amount = parseFloat(document.getElementById('acc-amount').value);
+            const dateStr = document.getElementById('acc-date').value;
+            const category = document.getElementById('acc-category').value;
+            const type = document.querySelector('input[name="acc-type"]:checked').value;
+
+            if (!title || isNaN(amount) || !dateStr) return;
+
+            if (type === 'parcelada') {
+                const installmentsCount = parseInt(document.getElementById('acc-installments-count').value) || 2;
+                const [startYear, startMonth, startDay] = dateStr.split('-').map(Number);
+                
+                const installmentAmount = amount / installmentsCount;
+
+                for (let i = 0; i < installmentsCount; i++) {
+                    let targetMonth = (startMonth - 1) + i;
+                    let targetYear = startYear + Math.floor(targetMonth / 12);
+                    targetMonth = targetMonth % 12;
+
+                    const pad = (n) => String(n).padStart(2, '0');
+                    // Days limit check
+                    const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+                    const actualDay = Math.min(startDay, daysInTargetMonth);
+                    
+                    const installmentDate = `${targetYear}-${pad(targetMonth + 1)}-${pad(actualDay)}`;
+
+                    state.expenses.push({
+                        id: 'exp-' + Date.now() + '-' + i,
+                        title: `${title} (${i + 1}/${installmentsCount})`,
+                        amount: parseFloat(installmentAmount.toFixed(2)),
+                        date: installmentDate,
+                        type: 'parcelada',
+                        category: category,
+                        paid: false,
+                        currentInstallment: i + 1,
+                        totalInstallments: installmentsCount
+                    });
+                }
+            } else {
+                state.expenses.push({
+                    id: 'exp-' + Date.now(),
+                    title: title,
+                    amount: amount,
+                    date: dateStr,
+                    type: type,
+                    category: category,
+                    paid: false
+                });
+            }
+
+            saveStateToStorage();
+            closeModal('modal-account');
+            
+            // Clear Form
+            document.getElementById('acc-title').value = '';
+            document.getElementById('acc-amount').value = '';
+            
+            renderApp();
+        }
+
+        function handleSaveIncome(event) {
+            event.preventDefault();
+            const title = document.getElementById('inc-title').value.trim();
+            const amount = parseFloat(document.getElementById('inc-amount').value);
+            const dateStr = document.getElementById('inc-date').value;
+            const type = document.querySelector('input[name="inc-type"]:checked').value;
+
+            if (!title || isNaN(amount) || !dateStr) return;
+
+            state.incomes.push({
+                id: 'inc-' + Date.now(),
+                title: title,
+                amount: amount,
+                date: dateStr,
+                type: type
+            });
+
+            saveStateToStorage();
+            closeModal('modal-income');
+            
+            document.getElementById('inc-title').value = '';
+            document.getElementById('inc-amount').value = '';
+
+            renderApp();
+        }
+
+        function togglePaidStatus(id) {
+            const exp = state.expenses.find(e => e.id === id);
+            if (exp) {
+                exp.paid = !exp.paid;
+                saveStateToStorage();
+
+                if (state.selectedDateKey) {
+                    const dayExpenses = getExpensesForMonth(state.currentYear, state.currentMonth).filter(e => e.date === state.selectedDateKey);
+                    openDayToast(state.selectedDateKey, dayExpenses);
+                }
+
+                renderApp();
+            }
+        }
+
+        function deleteExpense(id) {
+            state.expenses = state.expenses.filter(e => e.id !== id);
+            saveStateToStorage();
+
+            if (state.selectedDateKey) {
+                const dayExpenses = getExpensesForMonth(state.currentYear, state.currentMonth).filter(e => e.date === state.selectedDateKey);
+                if (dayExpenses.length > 0) openDayToast(state.selectedDateKey, dayExpenses);
+                else closeDayToast();
+            }
+
+            renderApp();
+        }
+
+        function deleteIncome(id) {
+            state.incomes = state.incomes.filter(i => i.id !== id);
+            saveStateToStorage();
+            renderApp();
+        }
+
+        // --- CHART.JS ANALYTICS ENGINE ---
+        function renderCharts() {
+            const doughnutCanvas = document.getElementById('chart-doughnut');
+            const barCanvas = document.getElementById('chart-bar');
+            const categoryCanvas = document.getElementById('chart-category');
+
+            if (!doughnutCanvas || !barCanvas || !categoryCanvas) return;
+
+            const mExpenses = getExpensesForMonth(state.currentYear, state.currentMonth);
+            const mIncomes = getIncomesForMonth(state.currentYear, state.currentMonth);
+
+            // Destroy previous instances
+            if (state.charts.doughnut) state.charts.doughnut.destroy();
+            if (state.charts.bar) state.charts.bar.destroy();
+            if (state.charts.category) state.charts.category.destroy();
+
+            const isDark = state.currentTheme !== 'light';
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+
+            // 1. Doughnut Chart Data
+            const recurrentTotal = mExpenses.filter(e => e.type === 'recorrente').reduce((a, b) => a + b.amount, 0);
+            const installmentTotal = mExpenses.filter(e => e.type === 'parcelada').reduce((a, b) => a + b.amount, 0);
+            const singleTotal = mExpenses.filter(e => e.type === 'unica').reduce((a, b) => a + b.amount, 0);
+
+            state.charts.doughnut = new Chart(doughnutCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Recorrentes', 'Parceladas', 'Únicas / Avulsas'],
+                    datasets: [{
+                        data: [recurrentTotal, installmentTotal, singleTotal],
+                        backgroundColor: ['#818cf8', '#c084fc', '#38bdf8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Inter', size: 11 } } }
+                    }
+                }
+            });
+
+            // 2. Bar Chart Data
+            const fixedIncome = mIncomes.filter(i => i.type === 'fixo').reduce((a, b) => a + b.amount, 0);
+            const extraIncome = mIncomes.filter(i => i.type === 'extra').reduce((a, b) => a + b.amount, 0);
+            const totalExp = mExpenses.reduce((a, b) => a + b.amount, 0);
+
+            state.charts.bar = new Chart(barCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Salário Fixo', 'Renda Extra', 'Total Despesas'],
+                    datasets: [{
+                        label: 'Valor (R$)',
+                        data: [fixedIncome, extraIncome, totalExp],
+                        backgroundColor: ['#34d399', '#10b981', '#f43f5e'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { display: false } },
+                        y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                    }
+                }
+            });
+
+            // 3. Category Horizontal Bar Chart Data
+            const categories = Object.keys(CATEGORY_COLORS);
+            const catTotals = categories.map(cat => {
+                return mExpenses
+                    .filter(e => (e.category || 'Outros') === cat)
+                    .reduce((a, b) => a + b.amount, 0);
+            });
+
+            state.charts.category = new Chart(categoryCanvas, {
+                type: 'bar',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        label: 'Despesas por Categoria (R$)',
+                        data: catTotals,
+                        backgroundColor: categories.map(c => CATEGORY_COLORS[c]),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                        y: { ticks: { color: textColor }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // --- THEME SWITCHER HANDLERS ---
+        function toggleThemeToast() {
+            const toast = document.getElementById('toast-settings');
+            toast.classList.toggle('hidden');
+        }
+
+        function setTheme(themeName) {
+            state.currentTheme = themeName;
+            saveStateToStorage();
+            renderApp();
+            document.getElementById('toast-settings').classList.add('hidden');
+        }
+
+        function highlightActiveThemeButton() {
+            ['dark', 'light', 'blue-emerald', 'midnight-purple'].forEach(t => {
+                const btn = document.getElementById(`theme-btn-${t}`);
+                if (btn) {
+                    if (t === state.currentTheme) {
+                        btn.classList.add('ring-2', 'ring-sky-500');
+                    } else {
+                        btn.classList.remove('ring-2', 'ring-sky-500');
+                    }
+                }
+            });
+        }
+
+        // --- GENERAL HELPER UTILITIES ---
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+    </script>
+</body>
+</html>
